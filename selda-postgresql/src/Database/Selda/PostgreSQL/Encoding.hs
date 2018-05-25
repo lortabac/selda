@@ -25,9 +25,10 @@ import Database.Selda.Backend
 import Unsafe.Coerce
 
 -- | OIDs for all types used by Selda.
-blobType, boolType, intType, textType, doubleType, dateType, timeType, timestampType :: Oid
+blobType, boolType, int8Type, int4Type, textType, doubleType, dateType, timeType, timestampType :: Oid
 boolType      = Oid 16
-intType       = Oid 20
+int8Type      = Oid 20
+int4Type      = Oid 23
 textType      = Oid 25
 doubleType    = Oid 701
 dateType      = Oid 1082
@@ -38,7 +39,7 @@ blobType      = Oid 17
 -- | Convert a parameter into an postgres parameter triple.
 fromSqlValue :: Lit a -> Maybe (Oid, BS.ByteString, Format)
 fromSqlValue (LBool b)     = Just (boolType, toBS $ if b then word8 1 else word8 0, Binary)
-fromSqlValue (LInt n)      = Just (intType, toBS $ int64BE (fromIntegral n), Binary)
+fromSqlValue (LInt n)      = Just (int8Type, toBS $ int64BE (fromIntegral n), Binary)
 fromSqlValue (LDouble f)   = Just (doubleType, toBS $ int64BE (unsafeCoerce f), Binary)
 fromSqlValue (LText s)     = Just (textType, encodeUtf8 $ Text.filter (/= '\0') s, Binary)
 fromSqlValue (LDateTime s) = Just (timestampType, encodeUtf8 s, Text)
@@ -52,22 +53,22 @@ fromSqlValue (LCustom l)   = fromSqlValue l
 -- | Get the corresponding OID for an SQL type representation.
 fromSqlType :: SqlTypeRep -> Oid
 fromSqlType TBool     = boolType
-fromSqlType TInt      = intType
+fromSqlType TInt      = int8Type
 fromSqlType TFloat    = doubleType
 fromSqlType TText     = textType
 fromSqlType TDateTime = timestampType
 fromSqlType TDate     = dateType
 fromSqlType TTime     = timeType
 fromSqlType TBlob     = blobType
-fromSqlType TRowID    = intType
+fromSqlType TRowID    = int8Type
 
 -- | Convert the given postgres return value and type to an @SqlValue@.
 toSqlValue :: Oid -> BS.ByteString -> SqlValue
 toSqlValue t val
   | t == boolType    = SqlBool $ readBool val
-  | t == intType     = SqlInt $ readInt val
   | t == doubleType  = SqlFloat $ read (unpack val)
   | t == blobType    = SqlBlob $ pgDecode val
+  | t `elem` intish  = SqlInt $ readInt val
   | t `elem` textish = SqlString (decodeUtf8 val)
   | otherwise        = error $ "BUG: result with unknown type oid: " ++ show t
   where
@@ -86,6 +87,7 @@ toSqlValue t val
         go x
           | BS.length x >= 2 = (16*hex 0 x + (hex 1 x)) : go (BS.drop 2 x)
           | otherwise        = []
+    intish  = [int8Type, int4Type]
     textish = [textType, timestampType, timeType, dateType]
     readBool "f"     = False
     readBool "0"     = False
