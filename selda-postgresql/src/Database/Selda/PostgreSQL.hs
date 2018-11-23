@@ -388,6 +388,7 @@ mkTypeRep _ispk "bigint"           = Right TInt
 mkTypeRep _ispk "float8"           = Right TFloat
 mkTypeRep _ispk "double precision" = Right TFloat
 mkTypeRep _ispk "timestamp"        = Right TDateTime
+mkTypeRep _ispk "timestamp without time zone" = Right TDateTime
 mkTypeRep _ispk "bytea"            = Right TBlob
 mkTypeRep _ispk "text"             = Right TText
 mkTypeRep _ispk "boolean"          = Right TBool
