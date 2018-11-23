@@ -6,11 +6,8 @@ dist
 #*
 cabal.sandbox.config
 /selda-tests/PGConnectInfo.hs
-/selda/README.md
-/selda/ChangeLog.md
 /selda/*.yaml
 /website/BaseUrl.hs
 /website/_site
-/*/LICENSE
 result*
 *.sqlite
