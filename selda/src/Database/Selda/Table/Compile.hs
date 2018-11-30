@@ -50,7 +50,7 @@ compileCreateTable cfg ifex tbl =
 -- | Compile a @CREATE INDEX@ query for the given index.
 compileCreateIndex :: PPConfig -> TableName -> ColName -> Maybe IndexMethod -> Text
 compileCreateIndex cfg tbl col mmethod = mconcat
-  [ "CREATE INDEX "
+  [ "CREATE INDEX IF NOT EXISTS "
   , fromColName $ addColPrefix col ("ix" <> rawTableName tbl <> "_")
   , " ON ", fromTableName tbl
   , case mmethod of
